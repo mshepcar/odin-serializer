@@ -531,7 +531,7 @@ namespace OdinSerializer
                             entry = EntryType.ExternalReferenceByGuid;
                             return;
                         }
-                        else if (valueContent.StartsWith(JsonConfig.EXTERNAL_STRING_REF_SIG, StringComparison.InvariantCulture))
+                        else if (valueContent.StartsWith('"' + JsonConfig.EXTERNAL_STRING_REF_SIG, StringComparison.InvariantCulture))
                         {
                             entry = EntryType.ExternalReferenceByString;
                             return;

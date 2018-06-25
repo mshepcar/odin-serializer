@@ -577,6 +577,8 @@ namespace OdinSerializer
             if (this.peekedEntryType == EntryType.ExternalReferenceByString)
             {
                 id = this.peekedEntryContent;
+                int start = JsonConfig.EXTERNAL_STRING_REF_SIG.Length + 2;
+                id = this.peekedEntryContent.Substring(start, this.peekedEntryContent.Length - start - 1);
                 this.MarkEntryConsumed();
                 return true;
             }

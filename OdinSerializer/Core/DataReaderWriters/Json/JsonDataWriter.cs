@@ -421,7 +421,7 @@ namespace OdinSerializer
                 throw new ArgumentNullException("id");
             }
 
-            this.WriteEntry(name, JsonConfig.EXTERNAL_STRING_REF_SIG + ":" + id);
+            this.WriteString(name, JsonConfig.EXTERNAL_STRING_REF_SIG + ":" + id);
         }
 
         /// <summary>
