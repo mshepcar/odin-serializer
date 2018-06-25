@@ -39,12 +39,10 @@ namespace OdinSerializer.Editor
         /// </summary>
         /// <param name="serializedTypes">The serialized types to support.</param>
         /// <returns>true if the scan succeeded, false if the scan failed or was cancelled</returns>
-        public static bool ScanProjectForSerializedTypes(out List<AOTSupportScanner.SupportedType> serializedTypes, Action<UnityEngine.Object> onScanObject = null)
+        public static bool ScanProjectForSerializedTypes(out List<AOTSupportScanner.SupportedType> serializedTypes)
         {
             using (var scanner = new AOTSupportScanner())
             {
-                scanner.OnScanObject += onScanObject;
-
                 scanner.BeginScan();
 
                 if (!scanner.ScanBuildScenes(includeSceneDependencies: true, showProgressBar: true))

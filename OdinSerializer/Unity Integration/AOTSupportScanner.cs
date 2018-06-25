@@ -34,7 +34,6 @@ namespace OdinSerializer.Editor
             public Type Type;
             public ISerializationPolicy Policy;
         }
-        public event Action<UnityEngine.Object> OnScanObject;
 
         private bool scanning;
         private bool allowRegisteringScannedTypes;
@@ -142,19 +141,6 @@ namespace OdinSerializer.Editor
                         {
                             if ((go.hideFlags & HideFlags.DontSaveInBuild) == 0)
                             {
-                                if (OnScanObject != null)
-                                {
-                                    try
-                                    {
-                                        this.allowRegisteringScannedTypes = true;
-                                        OnScanObject(go);
-                                    }
-                                    finally
-                                    {
-                                        this.allowRegisteringScannedTypes = false;
-                                    }
-                                }
-
                                 foreach (var component in go.GetComponents<ISerializationCallbackReceiver>())
                                 {
                                     try
@@ -276,7 +262,7 @@ namespace OdinSerializer.Editor
         public void ScanObject(UnityEngine.Object obj)
         {
             ISerializationCallbackReceiver receiver = obj as ISerializationCallbackReceiver;
-            if (OnScanObject != null || receiver != null)
+            if (receiver != null)
             {
                 bool formerForceEditorModeSerialization = UnitySerializationUtility.ForceEditorModeSerialization;
 
@@ -284,10 +270,7 @@ namespace OdinSerializer.Editor
                 {
                     UnitySerializationUtility.ForceEditorModeSerialization = true;
                     this.allowRegisteringScannedTypes = true;
-                    if (OnScanObject != null)
-                        OnScanObject(obj);
-                    if (receiver != null)
-                        receiver.OnBeforeSerialize();
+                    receiver.OnBeforeSerialize();
                 }
                 finally
                 {
