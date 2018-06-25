@@ -50,6 +50,13 @@ namespace OdinSerializer
         /// The deserialized value.
         /// </returns>
         object Deserialize(IDataReader reader);
+
+        /// <summary>
+        /// Deserializes a value using a specified <see cref="IDataReader" />.
+        /// </summary>
+        /// <param name="target">The class to deserialize into.</param>
+        /// <param name="reader">The reader to use.</param>
+        void Deserialize(object target, IDataReader reader);
     }
 
     /// <summary>

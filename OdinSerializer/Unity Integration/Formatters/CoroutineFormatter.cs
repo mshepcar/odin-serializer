@@ -65,6 +65,13 @@ namespace OdinSerializer
         }
 
         /// <summary>
+        /// Returns null.
+        /// </summary>
+        public void Deserialize(object value, IDataReader reader)
+        {
+        }
+
+        /// <summary>
         /// Does nothing.
         /// </summary>
         public void Serialize(object value, IDataWriter writer)
