@@ -62,14 +62,14 @@
             <param name="value">The value to serialize.</param>
             <param name="writer">The writer to serialize with.</param>
         </member>
-        <member name="M:OdinSerializer.Editor.AOTSupportUtilities.ScanProjectForSerializedTypes(System.Collections.Generic.List{System.Type}@)">
+        <member name="M:OdinSerializer.Editor.AOTSupportUtilities.ScanProjectForSerializedTypes(System.Collections.Generic.List{OdinSerializer.Editor.AOTSupportScanner.SupportedType}@,System.Action{UnityEngine.Object})">
             <summary>
             Scans the project's build scenes and resources, plus their dependencies, for serialized types to support. Progress bars are shown during the scan.
             </summary>
             <param name="serializedTypes">The serialized types to support.</param>
             <returns>true if the scan succeeded, false if the scan failed or was cancelled</returns>
         </member>
-        <member name="M:OdinSerializer.Editor.AOTSupportUtilities.GenerateDLL(System.String,System.String,System.Collections.Generic.List{System.Type},System.Boolean)">
+        <member name="M:OdinSerializer.Editor.AOTSupportUtilities.GenerateDLL(System.String,System.String,System.Collections.Generic.List{OdinSerializer.Editor.AOTSupportScanner.SupportedType},System.Boolean)">
             <summary>
             Generates an AOT DLL, using the given parameters.
             </summary>
@@ -5703,6 +5703,20 @@
             The deserialized value.
             </returns>
         </member>
+        <member name="M:OdinSerializer.BaseFormatter`1.Deserialize(System.Object,OdinSerializer.IDataReader)">
+            <summary>
+            Deserializes a value of type <see cref="!:T" /> using a specified <see cref="T:OdinSerializer.IDataReader" />.
+            </summary>
+            <param name="target">The class to deserialize into.</param>
+            <param name="reader">The reader to use.</param>
+        </member>
+        <member name="M:OdinSerializer.BaseFormatter`1.Deserialize(`0@,OdinSerializer.IDataReader)">
+            <summary>
+            Deserializes a value of type <see cref="!:T" /> using a specified <see cref="T:OdinSerializer.IDataReader" />.
+            </summary>
+            <param name="value">The value to read into.</param>
+            <param name="reader">The reader to use.</param>
+        </member>
         <member name="M:OdinSerializer.BaseFormatter`1.Serialize(`0,OdinSerializer.IDataWriter)">
             <summary>
             Serializes a value of type <see cref="!:T" /> using a specified <see cref="T:OdinSerializer.IDataWriter" />.
@@ -6140,6 +6154,13 @@
             The deserialized value.
             </returns>
         </member>
+        <member name="M:OdinSerializer.IFormatter.Deserialize(System.Object,OdinSerializer.IDataReader)">
+            <summary>
+            Deserializes a value using a specified <see cref="T:OdinSerializer.IDataReader" />.
+            </summary>
+            <param name="target">The class to deserialize into.</param>
+            <param name="reader">The reader to use.</param>
+        </member>
         <member name="T:OdinSerializer.IFormatter`1">
             <summary>
             Serializes and deserializes a given type T.
@@ -6241,6 +6262,20 @@
             <returns>
             The deserialized value.
             </returns>
+        </member>
+        <member name="M:OdinSerializer.MinimalBaseFormatter`1.Deserialize(System.Object,OdinSerializer.IDataReader)">
+            <summary>
+            Deserializes a value of type <see cref="!:T" /> using a specified <see cref="T:OdinSerializer.IDataReader" />.
+            </summary>
+            <param name="target">The class to deserialize into.</param>
+            <param name="reader">The reader to use.</param>
+        </member>
+        <member name="M:OdinSerializer.MinimalBaseFormatter`1.Deserialize(`0@,OdinSerializer.IDataReader)">
+            <summary>
+            Deserializes a value of type <see cref="!:T" /> using a specified <see cref="T:OdinSerializer.IDataReader" />.
+            </summary>
+            <param name="value">The value to deserialize.</param>
+            <param name="reader">The reader to use.</param>
         </member>
         <member name="M:OdinSerializer.MinimalBaseFormatter`1.Serialize(`0,OdinSerializer.IDataWriter)">
             <summary>
@@ -8190,6 +8225,11 @@
             </summary>
         </member>
         <member name="M:OdinSerializer.CoroutineFormatter.Deserialize(OdinSerializer.IDataReader)">
+            <summary>
+            Returns null.
+            </summary>
+        </member>
+        <member name="M:OdinSerializer.CoroutineFormatter.Deserialize(System.Object,OdinSerializer.IDataReader)">
             <summary>
             Returns null.
             </summary>
