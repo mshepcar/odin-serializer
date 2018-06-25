@@ -35,25 +35,25 @@ namespace OdinSerializer
     /// </summary>
     public abstract class Serializer
     {
-        private static readonly Dictionary<Type, Type> PrimitiveReaderWriterTypes = new Dictionary<Type, Type>()
+        private static readonly Dictionary<Type, Func<Serializer>> PrimitiveReaderWriterTypes = new Dictionary<Type, Func<Serializer>>()
         {
-            { typeof(char), typeof(CharSerializer) },
-            { typeof(string), typeof(StringSerializer) },
-            { typeof(sbyte), typeof(SByteSerializer) },
-            { typeof(short), typeof(Int16Serializer) },
-            { typeof(int), typeof(Int32Serializer) },
-            { typeof(long), typeof(Int64Serializer) },
-            { typeof(byte), typeof(ByteSerializer) },
-            { typeof(ushort), typeof(UInt16Serializer) },
-            { typeof(uint),   typeof(UInt32Serializer) },
-            { typeof(ulong),  typeof(UInt64Serializer) },
-            { typeof(decimal),   typeof(DecimalSerializer) },
-            { typeof(bool),  typeof(BooleanSerializer) },
-            { typeof(float),   typeof(SingleSerializer) },
-            { typeof(double),  typeof(DoubleSerializer) },
-            { typeof(IntPtr),   typeof(IntPtrSerializer) },
-            { typeof(UIntPtr),  typeof(UIntPtrSerializer) },
-            { typeof(Guid),  typeof(GuidSerializer) }
+            { typeof(char),     () => {return new CharSerializer(); } },
+            { typeof(string),   () => {return new StringSerializer(); } },
+            { typeof(sbyte),    () => {return new SByteSerializer(); } },
+            { typeof(short),    () => {return new Int16Serializer(); } },
+            { typeof(int),      () => {return new Int32Serializer(); } },
+            { typeof(long),     () => {return new Int64Serializer(); } },
+            { typeof(byte),     () => {return new ByteSerializer(); } },
+            { typeof(ushort),   () => {return new UInt16Serializer(); } },
+            { typeof(uint),     () => {return new UInt32Serializer(); } },
+            { typeof(ulong),    () => {return new UInt64Serializer(); } },
+            { typeof(decimal),  () => {return new DecimalSerializer(); } },
+            { typeof(bool),     () => {return new BooleanSerializer(); } },
+            { typeof(float),    () => {return new SingleSerializer(); } },
+            { typeof(double),   () => {return new DoubleSerializer(); } },
+            { typeof(IntPtr),   () => {return new IntPtrSerializer(); } },
+            { typeof(UIntPtr),  () => {return new UIntPtrSerializer(); } },
+            { typeof(Guid),     () => {return new GuidSerializer(); } }
         };
 
         private static readonly object LOCK = new object();
@@ -166,29 +166,29 @@ namespace OdinSerializer
         {
             try
             {
-                Type resultType = null;
+                Func<Serializer> resultType = null;
 
                 if (type.IsEnum)
                 {
-                    resultType = typeof(EnumSerializer<>).MakeGenericType(type);
+                    return (Serializer)Activator.CreateInstance(typeof(EnumSerializer<>).MakeGenericType(type));
                 }
                 else if (FormatterUtilities.IsPrimitiveType(type))
                 {
                     try
                     {
                         resultType = PrimitiveReaderWriterTypes[type];
+                        return resultType();
                     }
                     catch (KeyNotFoundException)
                     {
                         UnityEngine.Debug.LogError("Failed to find primitive serializer for " + type.Name);
+                        return null;
                     }
                 }
                 else
                 {
-                    resultType = typeof(ComplexTypeSerializer<>).MakeGenericType(type);
+                    return (Serializer)Activator.CreateInstance(typeof(ComplexTypeSerializer<>).MakeGenericType(type));
                 }
-
-                return (Serializer)Activator.CreateInstance(resultType);
             }
             // System.ExecutionEngineException is marked obsolete in .NET 4.6
             // That's all very good for .NET, but Unity still uses it!
