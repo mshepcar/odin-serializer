@@ -437,7 +437,7 @@ namespace OdinSerializer
                 }
             }
 
-            formatters.Add((IFormatter)Activator.CreateInstance(typeof(ReflectionFormatter<>).MakeGenericType(type)));
+            formatters.Add((IFormatter)Activator.CreateInstance(typeof(ReflectionFormatter<>).MakeGenericType(type), policy));
 
             return formatters;
         }
@@ -571,7 +571,7 @@ namespace OdinSerializer
             }
 
             // Finally, we fall back to a reflection-based formatter if nothing else has been found
-            return (IFormatter)Activator.CreateInstance(typeof(ReflectionFormatter<>).MakeGenericType(type));
+            return (IFormatter)Activator.CreateInstance(typeof(ReflectionFormatter<>).MakeGenericType(type), policy);
         }
 
         private static IFormatter GetFormatterInstance(Type type)
