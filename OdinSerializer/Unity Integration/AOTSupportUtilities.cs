@@ -39,10 +39,12 @@ namespace OdinSerializer.Editor
         /// </summary>
         /// <param name="serializedTypes">The serialized types to support.</param>
         /// <returns>true if the scan succeeded, false if the scan failed or was cancelled</returns>
-        public static bool ScanProjectForSerializedTypes(out List<Type> serializedTypes)
+        public static bool ScanProjectForSerializedTypes(out List<AOTSupportScanner.SupportedType> serializedTypes, Action<UnityEngine.Object> onScanObject = null)
         {
             using (var scanner = new AOTSupportScanner())
             {
+                scanner.OnScanObject += onScanObject;
+
                 scanner.BeginScan();
 
                 if (!scanner.ScanBuildScenes(includeSceneDependencies: true, showProgressBar: true))
@@ -67,7 +69,7 @@ namespace OdinSerializer.Editor
         /// <summary>
         /// Generates an AOT DLL, using the given parameters.
         /// </summary>
-        public static void GenerateDLL(string dirPath, string assemblyName, List<Type> supportSerializedTypes, bool generateLinkXml = true)
+        public static void GenerateDLL(string dirPath, string assemblyName, List<AOTSupportScanner.SupportedType> supportSerializedTypes, bool generateLinkXml = true)
         {
             if (!dirPath.EndsWith("/")) dirPath += "/";
 
@@ -111,13 +113,14 @@ namespace OdinSerializer.Editor
             var staticConstructor = type.DefineTypeInitializer();
             var il = staticConstructor.GetILGenerator();
 
-            HashSet<Type> seenTypes = new HashSet<Type>();
+            HashSet<AOTSupportScanner.SupportedType> seenTypes = new HashSet<AOTSupportScanner.SupportedType>();
 
             //var endPoint = il.DefineLabel();
             //il.Emit(OpCodes.Br, endPoint);
 
-            foreach (var serializedType in supportSerializedTypes)
+            foreach (var supportedType in supportSerializedTypes)
             {
+                var serializedType = supportedType.Type;
                 if (serializedType == null) continue;
 
                 if (serializedType.IsAbstract || serializedType.IsInterface)
@@ -132,9 +135,7 @@ namespace OdinSerializer.Editor
                     continue;
                 }
 
-                if (seenTypes.Contains(serializedType)) continue;
-
-                seenTypes.Add(serializedType);
+                if (!seenTypes.Add(supportedType)) continue;
 
                 // Reference serialized type
                 {
@@ -158,9 +159,9 @@ namespace OdinSerializer.Editor
                 }
 
                 // Reference and/or create formatter type
-                if (!FormatterUtilities.IsPrimitiveType(serializedType) && !typeof(UnityEngine.Object).IsAssignableFrom(serializedType))
+                if (!FormatterUtilities.IsPrimitiveType(serializedType) && (supportedType.Policy != SerializationPolicies.Unity || !typeof(UnityEngine.Object).IsAssignableFrom(serializedType)))
                 {
-                    var actualFormatter = FormatterLocator.GetFormatter(serializedType, SerializationPolicies.Unity);
+                    var actualFormatter = FormatterLocator.GetFormatter(serializedType, supportedType.Policy);
 
                     if (actualFormatter.GetType().IsDefined<EmittedFormatterAttribute>())
                     {
@@ -177,7 +178,7 @@ namespace OdinSerializer.Editor
                         //}
                     }
 
-                    var formatters = FormatterLocator.GetAllCompatiblePredefinedFormatters(serializedType, SerializationPolicies.Unity);
+                    var formatters = FormatterLocator.GetAllCompatiblePredefinedFormatters(serializedType, supportedType.Policy);
 
                     foreach (var formatter in formatters)
                     {

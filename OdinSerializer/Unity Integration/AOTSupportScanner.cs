@@ -29,10 +29,16 @@ namespace OdinSerializer.Editor
     using UnityEngine;
 
     public sealed class AOTSupportScanner : IDisposable
-    {
+    {   public struct SupportedType
+        {
+            public Type Type;
+            public ISerializationPolicy Policy;
+        }
+        public event Action<UnityEngine.Object> OnScanObject;
+
         private bool scanning;
         private bool allowRegisteringScannedTypes;
-        private HashSet<Type> seenSerializedTypes = new HashSet<Type>();
+        private HashSet<SupportedType> seenSerializedTypes = new HashSet<SupportedType>();
 
         public void BeginScan()
         {
@@ -136,6 +142,19 @@ namespace OdinSerializer.Editor
                         {
                             if ((go.hideFlags & HideFlags.DontSaveInBuild) == 0)
                             {
+                                if (OnScanObject != null)
+                                {
+                                    try
+                                    {
+                                        this.allowRegisteringScannedTypes = true;
+                                        OnScanObject(go);
+                                    }
+                                    finally
+                                    {
+                                        this.allowRegisteringScannedTypes = false;
+                                    }
+                                }
+
                                 foreach (var component in go.GetComponents<ISerializationCallbackReceiver>())
                                 {
                                     try
@@ -256,7 +275,8 @@ namespace OdinSerializer.Editor
 
         public void ScanObject(UnityEngine.Object obj)
         {
-            if (obj is ISerializationCallbackReceiver)
+            ISerializationCallbackReceiver receiver = obj as ISerializationCallbackReceiver;
+            if (OnScanObject != null || receiver != null)
             {
                 bool formerForceEditorModeSerialization = UnitySerializationUtility.ForceEditorModeSerialization;
 
@@ -264,7 +284,10 @@ namespace OdinSerializer.Editor
                 {
                     UnitySerializationUtility.ForceEditorModeSerialization = true;
                     this.allowRegisteringScannedTypes = true;
-                    (obj as ISerializationCallbackReceiver).OnBeforeSerialize();
+                    if (OnScanObject != null)
+                        OnScanObject(obj);
+                    if (receiver != null)
+                        receiver.OnBeforeSerialize();
                 }
                 finally
                 {
@@ -274,7 +297,7 @@ namespace OdinSerializer.Editor
             }
         }
 
-        public List<Type> EndScan()
+        public List<SupportedType> EndScan()
         {
             if (!this.scanning) throw new InvalidOperationException("Cannot end a scan when scanning has not begin.");
 
@@ -297,7 +320,7 @@ namespace OdinSerializer.Editor
             }
         }
 
-        private void OnLocatedEmitType(Type type)
+        private void OnLocatedEmitType(Type type, ISerializationPolicy policy)
         {
             var typeFlags = AssemblyUtilities.GetAssemblyTypeFlag(type.Assembly);
             if ((typeFlags & AssemblyTypeFlags.UnityEditorTypes) == AssemblyTypeFlags.UnityEditorTypes)
@@ -310,7 +333,7 @@ namespace OdinSerializer.Editor
                 return;
             }
 
-            this.RegisterType(type);
+            this.RegisterType(type, policy);
         }
 
         private void OnSerializedType(Type type)
@@ -329,7 +352,7 @@ namespace OdinSerializer.Editor
             this.RegisterType(type);
         }
 
-        private void OnLocatedFormatter(IFormatter formatter)
+        private void OnLocatedFormatter(IFormatter formatter, ISerializationPolicy policy)
         {
             var typeFlags = AssemblyUtilities.GetAssemblyTypeFlag(formatter.SerializedType.Assembly);
             if ((typeFlags & AssemblyTypeFlags.UnityEditorTypes) == AssemblyTypeFlags.UnityEditorTypes)
@@ -346,28 +369,28 @@ namespace OdinSerializer.Editor
 
             if (type != null)
             {
-                this.RegisterType(type);
+                this.RegisterType(type, policy);
             }
         }
 
-        private void RegisterType(Type type)
+        private void RegisterType(Type type, ISerializationPolicy policy = null)
         {
             if (!this.allowRegisteringScannedTypes) return;
             if (type.IsAbstract || type.IsInterface) return;
             if (type.IsGenericType && (type.IsGenericTypeDefinition || !type.IsFullyConstructedGenericType())) return;
 
-            //if (this.seenSerializedTypes.Add(type))
+            //if (this.seenSerializedTypes.Add(new SupportedType { Type = type, Policy = policy }))
             //{
             //    Debug.Log("Added " + type.GetNiceFullName());
             //}
 
-            this.seenSerializedTypes.Add(type);
+            this.seenSerializedTypes.Add(new SupportedType { Type = type, Policy = policy });
 
             if (type.IsGenericType)
             {
                 foreach (var arg in type.GetGenericArguments())
                 {
-                    this.RegisterType(arg);
+                    this.RegisterType(arg, policy);
                 }
             }
         }

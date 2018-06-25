@@ -63,12 +63,12 @@ namespace OdinSerializer
         /// Editor-only event that fires whenever an emittable formatter has been located.
         /// This event is used by the AOT formatter pre-emitter to locate types that need to have formatters pre-emitted.
         /// </summary>
-        public static event Action<Type> OnLocatedEmittableFormatterForType;
+        public static event Action<Type, ISerializationPolicy> OnLocatedEmittableFormatterForType;
 
         /// <summary>
         /// Editor-only event that fires whenever a formatter has been located.
         /// </summary>
-        public static event Action<IFormatter> OnLocatedFormatter;
+        public static event Action<IFormatter, ISerializationPolicy> OnLocatedFormatter;
 
 #endif
 
@@ -266,7 +266,7 @@ namespace OdinSerializer
 #if UNITY_EDITOR
             if (OnLocatedFormatter != null)
             {
-                OnLocatedFormatter(result);
+                OnLocatedFormatter(result, policy);
             }
 
             if (OnLocatedEmittableFormatterForType != null && result.GetType().IsGenericType)
@@ -274,13 +274,13 @@ namespace OdinSerializer
 #if CAN_EMIT
                 if (result.GetType().GetGenericTypeDefinition() == typeof(FormatterEmitter.RuntimeEmittedFormatter<>))
                 {
-                    OnLocatedEmittableFormatterForType(type);
+                    OnLocatedEmittableFormatterForType(type, policy);
                 }
                 else
 #endif
                 if (result.GetType().GetGenericTypeDefinition() == typeof(ReflectionFormatter<>))
                 {
-                    OnLocatedEmittableFormatterForType(type);
+                    OnLocatedEmittableFormatterForType(type, policy);
                 }
             }
 #endif
