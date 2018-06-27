@@ -214,6 +214,7 @@ namespace OdinSerializer
         /// <returns>The fully constructed, emitted formatter type.</returns>
         public static Type EmitAOTFormatter(Type formattedType, ModuleBuilder moduleBuilder, ISerializationPolicy policy)
         {
+            MemberInfo[] members = FormatterUtilities.GetSerializableMembers(formattedType, policy);
             Dictionary<string, MemberInfo> serializableMembers = FormatterUtilities.GetSerializableMembersMap(formattedType, policy);
 
             string formatterName = moduleBuilder.Name + "." + formattedType.GetCompilableNiceFullName() + "__AOTFormatter";
@@ -279,7 +280,7 @@ namespace OdinSerializer
                 );
 
                 writeBaseMethod.GetParameters().ForEach(n => dynamicWriteMethod.DefineParameter(n.Position + 1, n.Attributes, n.Name));
-                EmitWriteMethodContents(dynamicWriteMethod.GetILGenerator(), formattedType, serializerFields, memberNames, serializerWriteMethods);
+                EmitWriteMethodContents(dynamicWriteMethod.GetILGenerator(), formattedType, members, serializerFields, memberNames, serializerWriteMethods);
             }
 
             var result = formatterType.CreateType();
@@ -292,6 +293,7 @@ namespace OdinSerializer
 
         private static IFormatter CreateGenericFormatter(Type formattedType, ModuleBuilder moduleBuilder, ISerializationPolicy policy)
         {
+            MemberInfo[] members = FormatterUtilities.GetSerializableMembers(formattedType, policy);
             Dictionary<string, MemberInfo> serializableMembers = FormatterUtilities.GetSerializableMembersMap(formattedType, policy);
 
             if (serializableMembers.Count == 0)
@@ -338,7 +340,7 @@ namespace OdinSerializer
                 MethodInfo writeDataEntriesMethod = formatterType.GetMethod("WriteDataEntries", Flags.InstanceAnyVisibility);
                 DynamicMethod dynamicWriteMethod = new DynamicMethod("Dynamic_Write_" + formattedType.GetCompilableNiceFullName(), null, writeDataEntriesMethod.GetParameters().Select(n => n.ParameterType).ToArray(), true);
                 writeDataEntriesMethod.GetParameters().ForEach(n => dynamicWriteMethod.DefineParameter(n.Position + 1, n.Attributes, n.Name));
-                EmitWriteMethodContents(dynamicWriteMethod.GetILGenerator(), formattedType, serializerFields, memberNames, serializerWriteMethods);
+                EmitWriteMethodContents(dynamicWriteMethod.GetILGenerator(), formattedType, members, serializerFields, memberNames, serializerWriteMethods);
                 del2 = dynamicWriteMethod.CreateDelegate(writeDelegateType);
             }
 
@@ -540,11 +542,12 @@ namespace OdinSerializer
         private static void EmitWriteMethodContents(
             ILGenerator gen,
             Type formattedType,
+            MemberInfo[] members,
             Dictionary<Type, FieldBuilder> serializerFields,
             Dictionary<MemberInfo, List<string>> memberNames,
             Dictionary<Type, MethodInfo> serializerWriteMethods)
         {
-            foreach (var member in memberNames.Keys)
+            foreach (var member in members)
             {
                 var memberType = FormatterUtilities.GetContainedType(member);
 

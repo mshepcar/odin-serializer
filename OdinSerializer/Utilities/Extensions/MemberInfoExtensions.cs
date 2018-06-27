@@ -222,5 +222,10 @@ namespace OdinSerializer.Utilities
 
             return memberInfo;
         }
+
+        public static bool IsNonAutoProperty(this MemberInfo member)
+        {
+            return member is PropertyInfo && ((PropertyInfo)member).IsAutoProperty() == false;
+        }
     }
 }

@@ -333,6 +333,8 @@ You probably need to assign the nullValue variable of the {0} script in the insp
                     }
                 }
             }
+            // ensure non-auto properties come last as their getters/setters may depend on other members
+            members.Sort((a, b) => (a.IsNonAutoProperty()).CompareTo(b.IsNonAutoProperty()));
         }
 
         /// <summary>

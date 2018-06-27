@@ -84,6 +84,12 @@ namespace OdinSerializer
                         {
                             everythingPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Everything", true, (member) =>
                             {
+                                // Non-auto properties are never supported.
+                                if (member.IsNonAutoProperty())
+                                {
+                                    return false;
+                                }
+
                                 if (!(member is FieldInfo))
                                 {
                                     return false;
@@ -125,7 +131,7 @@ namespace OdinSerializer
                             unityPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Unity", true, (member) =>
                             {
                                 // Non-auto properties are never supported.
-                                if (member is PropertyInfo && ((PropertyInfo)member).IsAutoProperty() == false)
+                                if (member.IsNonAutoProperty())
                                 {
                                     return false;
                                 }
@@ -170,7 +176,7 @@ namespace OdinSerializer
                             strictPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Strict", true, (member) =>
                             {
                                 // Non-auto properties are never supported.
-                                if (member is PropertyInfo && ((PropertyInfo)member).IsAutoProperty() == false)
+                                if (member.IsNonAutoProperty())
                                 {
                                     return false;
                                 }
